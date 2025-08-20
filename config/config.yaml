@@ -1,0 +1,100 @@
+# FX Anomaly Detection System Configuration
+
+kafka:
+  bootstrap_servers: "localhost:9092"
+  producer_topic: "fx-trades"
+  consumer_topic: "fx-trades"
+  anomaly_topic: "fx-anomalies"
+  group_id: "fx-anomaly-detector"
+  auto_offset_reset: "latest"
+  enable_auto_commit: true
+  value_deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
+  key_deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
+
+spark:
+  app_name: "FX-Anomaly-Detector"
+  master: "local[*]"
+  batch_interval: 5  # seconds
+  checkpoint_location: "./checkpoints"
+  spark_sql_streaming_checkpoint_location: "./checkpoints/sql"
+  spark_streaming_backpressure_enabled: true
+  spark_streaming_receiver_write_ack_enabled: true
+
+model:
+  path: "./model/fx_anomaly_model.pkl"
+  contamination: 0.05  # Expected proportion of anomalies
+  random_state: 42
+  n_estimators: 100
+  max_samples: "auto"
+
+data:
+  # Synthetic data generation
+  trade_interval: 1.0  # seconds between trades
+  anomaly_rate: 0.05  # 5% anomalous trades
+  currency_pairs: ["EUR/USD", "GBP/USD", "USD/JPY", "USD/CHF", "AUD/USD"]
+  price_ranges:
+    "EUR/USD": [1.0500, 1.1500]
+    "GBP/USD": [1.2000, 1.3500]
+    "USD/JPY": [100.00, 150.00]
+    "USD/CHF": [0.8500, 0.9500]
+    "AUD/USD": [0.6500, 0.7500]
+  amount_range: [1000, 1000000]  # Trade amount range
+  
+  # Real-time FX data sources
+  real_time_enabled: true  # Set to true to use real FX data
+  fx_data_sources:
+    # Alpha Vantage API (free tier available)
+    alpha_vantage:
+      api_key: "${ALPHA_VANTAGE_API_KEY}"  # Set via environment variable
+      base_url: "https://www.alphavantage.co/query"
+      currency_pairs: ["EUR/USD", "GBP/USD", "USD/JPY", "USD/CHF", "AUD/USD"]
+      update_interval: 60  # seconds (respects 5 calls/minute limit)
+    
+    # Exchange Rate Host API (backup - free tier available)
+    exchange_rate_host:
+      api_key: "${EXCHANGE_RATE_HOST_API_KEY}"  # Set via environment variable
+      base_url: "https://api.exchangerate.host/convert"
+      currency_pairs: ["EUR/USD", "GBP/USD", "USD/JPY", "USD/CHF", "AUD/USD"]
+      update_interval: 30  # seconds
+    
+    # Binance WebSocket (free crypto data)
+    binance_websocket:
+      url: "wss://stream.binance.com:9443/ws/btcusdt@trade"
+      currency_pairs: ["BTC/USD", "ETH/USD"]
+      reconnect_interval: 5  # seconds
+
+database:
+  # PostgreSQL configuration (for production)
+  postgresql:
+    host: "localhost"
+    port: 5432
+    database: "fx_anomalies"
+    username: "postgres"
+    password: "${POSTGRES_PASSWORD}"  # Set via environment variable
+    tables:
+      anomalies: "anomalies"
+      trades: "trades"
+      models: "models"
+  
+  # SQLite configuration (for development)
+  sqlite:
+    database_path: "./data/fx_anomalies.db"
+    tables:
+      anomalies: "anomalies"
+      trades: "trades"
+      models: "models"
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "./logs/fx_anomaly_detector.log"
+
+output:
+  console_enabled: true
+  kafka_enabled: true
+  database_enabled: true
+  database_type: "postgresql"  # Options: postgresql, mongodb, sqlite
+  mongodb_enabled: false
+  mongodb_uri: "mongodb://localhost:27017"
+  mongodb_database: "fx_trades"
+  mongodb_collection: "anomalies" 

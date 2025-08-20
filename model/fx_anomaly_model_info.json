@@ -1,0 +1,23 @@
+{
+  "feature_columns": [
+    "amount",
+    "price",
+    "notional_value",
+    "currency_pair_encoded",
+    "hour",
+    "day_of_week",
+    "month",
+    "amount_log",
+    "price_log",
+    "notional_value_log"
+  ],
+  "model_type": "IsolationForest",
+  "training_timestamp": "2025-06-18T10:29:07.046860",
+  "config": {
+    "path": "./model/fx_anomaly_model.pkl",
+    "contamination": 0.05,
+    "random_state": 42,
+    "n_estimators": 100,
+    "max_samples": "auto"
+  }
+}
