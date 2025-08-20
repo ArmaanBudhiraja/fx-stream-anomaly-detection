@@ -323,4 +323,4 @@ This project is licensed under the MIT License.
 - Alpha Vantage for FX data API
 - Exchange Rate Host for backup data
 - Apache Kafka and Spark communities
-- Scikit-learn for ML algorithms 
+- Scikit-learn for ML algorithms # fx-stream-anomaly-detection
